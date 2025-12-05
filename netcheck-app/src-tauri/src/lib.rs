@@ -4,11 +4,14 @@
 //! Runs multiple diagnostic checks in parallel for faster results.
 
 mod diagnostic;
+mod report_generator;
 mod types;
 
 use crate::diagnostic::*;
+use crate::report_generator::{generate_report, ExportRequest};
 use crate::types::*;
 use chrono::Utc;
+use std::path::PathBuf;
 use tauri::{AppHandle, Emitter};
 use tokio::time::{timeout, Duration};
 
@@ -258,11 +261,23 @@ async fn run_diagnostic(app: AppHandle, target_url: String) -> Result<Diagnostic
     })
 }
 
+/// Export diagnostic report to DOCX file
+#[tauri::command]
+async fn export_docx_report(request: ExportRequest, save_path: String) -> Result<String, String> {
+    let path = PathBuf::from(&save_path);
+
+    generate_report(&request.report, &request.logs, &path)
+        .map_err(|e| format!("Failed to generate report: {}", e))?;
+
+    Ok(format!("Report saved successfully to: {}", save_path))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![run_diagnostic])
+        .plugin(tauri_plugin_dialog::init())
+        .invoke_handler(tauri::generate_handler![run_diagnostic, export_docx_report])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { save } from "@tauri-apps/plugin-dialog";
 import {
   Globe,
   Search,
@@ -20,6 +21,7 @@ import {
   Timer,
   BarChart3,
   Crosshair,
+  FileText,
 } from "lucide-react";
 import type {
   DiagnosticStep,
@@ -165,6 +167,52 @@ function App() {
       return next;
     });
   }, []);
+
+  // State for export loading
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Export diagnostic report to DOCX
+  const exportDocxReport = useCallback(async () => {
+    if (!report) return;
+
+    try {
+      setIsExporting(true);
+      addLog("info", "export", "Đang chuẩn bị xuất báo cáo DOCX...");
+
+      // Open native save dialog
+      const savePath = await save({
+        defaultPath: `netcheck-report-${new Date().toISOString().split("T")[0]}.docx`,
+        filters: [
+          {
+            name: "Word Document",
+            extensions: ["docx"],
+          },
+        ],
+      });
+
+      if (!savePath) {
+        addLog("info", "export", "Đã hủy xuất báo cáo");
+        setIsExporting(false);
+        return;
+      }
+
+      // Call Rust backend to generate and save DOCX
+      const result = await invoke<string>("export_docx_report", {
+        request: {
+          report: report,
+          logs: logs,
+        },
+        savePath: savePath,
+      });
+
+      addLog("success", "export", result);
+    } catch (error) {
+      addLog("error", "export", `Lỗi xuất báo cáo: ${error}`);
+      console.error("Export error:", error);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [report, logs, addLog]);
 
   const runDiagnostic = useCallback(async () => {
     if (!url.trim()) return;
@@ -766,6 +814,25 @@ function App() {
               <RefreshCw className="w-4 h-4" />
               Kiểm tra lại
             </button>
+            {report && (
+              <button
+                onClick={exportDocxReport}
+                disabled={isExporting}
+                className="px-4 py-2 bg-gradient-to-r from-green-600/50 to-emerald-600/50 hover:from-green-500/50 hover:to-emerald-500/50 disabled:from-slate-600/50 disabled:to-slate-600/50 disabled:cursor-not-allowed rounded-lg text-sm text-white flex items-center gap-2 transition-colors border border-green-500/30"
+              >
+                {isExporting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Đang xuất...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-4 h-4" />
+                    Xuất báo cáo DOCX
+                  </>
+                )}
+              </button>
+            )}
           </div>
         )}
       </main>
