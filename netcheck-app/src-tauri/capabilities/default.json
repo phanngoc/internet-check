@@ -1,0 +1,75 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "identifier": "main-capability",
+  "description": "Capability for the main window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:event:default",
+    "shell:allow-open",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "dig",
+          "cmd": "dig",
+          "args": true,
+          "sidecar": false
+        },
+        {
+          "name": "curl",
+          "cmd": "curl",
+          "args": true,
+          "sidecar": false
+        },
+        {
+          "name": "ping",
+          "cmd": "ping",
+          "args": true,
+          "sidecar": false
+        },
+        {
+          "name": "traceroute",
+          "cmd": "traceroute",
+          "args": true,
+          "sidecar": false
+        },
+        {
+          "name": "openssl",
+          "cmd": "openssl",
+          "args": true,
+          "sidecar": false
+        },
+        {
+          "name": "mtr",
+          "cmd": "mtr",
+          "args": true,
+          "sidecar": false
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "dig",
+          "cmd": "dig",
+          "args": true,
+          "sidecar": false
+        },
+        {
+          "name": "curl",
+          "cmd": "curl",
+          "args": true,
+          "sidecar": false
+        },
+        {
+          "name": "ping",
+          "cmd": "ping",
+          "args": true,
+          "sidecar": false
+        }
+      ]
+    }
+  ]
+}
