@@ -2,6 +2,8 @@
 
 🔍 Bộ công cụ chẩn đoán mạng toàn diện cho Linux/macOS, bao gồm ứng dụng desktop và các script phân tích chuyên sâu.
 
+![NetCheck Desktop](./network-check.gif "NetCheck Desktop App Screenshot")
+
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey.svg)
 
@@ -477,9 +479,7 @@ A: Hiện tại copy/paste từ terminal output. Tính năng export JSON/PDF đa
 
 ## 📧 Liên hệ
 
-- GitHub Issues: [Report bugs](https://github.com/yourusername/internet-check/issues)
-- Email: your.email@example.com
-
+- GitHub Issues: [Report bugs]
 ---
 
 **⭐ Nếu thấy hữu ích, đừng quên star repo nhé!**
