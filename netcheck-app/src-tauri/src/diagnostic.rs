@@ -113,7 +113,7 @@ fn detect_cdn(nameservers: &[String]) -> Option<String> {
 
 /// Run TCP/HTTP connection timing diagnostic
 pub async fn check_tcp_timing(url: &str) -> Result<TcpResult, String> {
-    let curl_format = r#"{"dns": %{time_namelookup}, "connect": %{time_connect}, "ssl": %{time_appconnect}, "ttfb": %{time_starttransfer}, "total": %{time_total}, "http_code": %{http_code}, "speed": %{speed_download}}"#;
+    let curl_format = r#"{"dns": %{time_namelookup}, "connect": %{time_connect}, "ssl": %{time_appconnect}, "ttfb": %{time_starttransfer}, "total": %{time_total}, "http_code": "%{http_code}", "speed": %{speed_download}}"#;
     
     let output = Command::new("curl")
         .args([
@@ -140,7 +140,10 @@ pub async fn check_tcp_timing(url: &str) -> Result<TcpResult, String> {
         ssl_time_ms: json["ssl"].as_f64().unwrap_or(0.0) * 1000.0,
         ttfb_ms: json["ttfb"].as_f64().unwrap_or(0.0) * 1000.0,
         total_time_ms: json["total"].as_f64().unwrap_or(0.0) * 1000.0,
-        http_code: json["http_code"].as_u64().unwrap_or(0) as u16,
+        http_code: json["http_code"]
+            .as_str()
+            .and_then(|s| s.parse::<u16>().ok())
+            .unwrap_or(0),
         download_speed_kbps: json["speed"].as_f64().unwrap_or(0.0) / 1024.0,
     })
 }

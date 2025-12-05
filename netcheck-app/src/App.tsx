@@ -331,33 +331,78 @@ function App() {
     return nodes;
   }, [report, steps, url]);
 
-  // Generate timing waterfall data
+  // Generate timing waterfall data from report.tcp
   const waterfallData = useMemo((): WaterfallSegment[] => {
-    if (!report) return [];
+    if (!report?.tcp) return [];
 
     const segments: WaterfallSegment[] = [];
     let currentOffset = 0;
 
-    steps.forEach(step => {
-      if (step.duration_ms) {
-        const type = step.id as WaterfallSegment["type"];
-        segments.push({
-          type: type === "dns" || type === "tcp" || type === "ssl" || type === "http" 
-            ? type 
-            : "other",
-          label: step.name.replace(/^[^\s]+\s+/, ""), // Remove emoji prefix
-          start_ms: currentOffset,
-          duration_ms: step.duration_ms,
-          status: step.status === "success" ? "normal" 
-            : step.status === "warning" ? "warning" 
-            : step.status === "error" ? "critical" : "normal",
-        });
-        currentOffset += step.duration_ms;
-      }
-    });
+    // DNS Resolution
+    if (report.tcp.dns_time_ms > 0) {
+      segments.push({
+        type: "dns",
+        label: "DNS Resolution",
+        start_ms: currentOffset,
+        duration_ms: report.tcp.dns_time_ms,
+        status: report.tcp.dns_time_ms > 100 ? "warning" : "normal",
+      });
+      currentOffset += report.tcp.dns_time_ms;
+    }
+
+    // TCP Connect
+    const tcpDuration = report.tcp.connect_time_ms - report.tcp.dns_time_ms;
+    if (tcpDuration > 0) {
+      segments.push({
+        type: "tcp",
+        label: "TCP Connect",
+        start_ms: currentOffset,
+        duration_ms: tcpDuration,
+        status: tcpDuration > 200 ? "warning" : "normal",
+      });
+      currentOffset += tcpDuration;
+    }
+
+    // SSL/TLS Handshake
+    const sslDuration = report.tcp.ssl_time_ms - report.tcp.connect_time_ms;
+    if (sslDuration > 0) {
+      segments.push({
+        type: "ssl",
+        label: "SSL/TLS Handshake",
+        start_ms: currentOffset,
+        duration_ms: sslDuration,
+        status: sslDuration > 300 ? "warning" : "normal",
+      });
+      currentOffset += sslDuration;
+    }
+
+    // TTFB (Time to First Byte)
+    const ttfbDuration = report.tcp.ttfb_ms - report.tcp.ssl_time_ms;
+    if (ttfbDuration > 0) {
+      segments.push({
+        type: "ttfb",
+        label: "Time to First Byte",
+        start_ms: currentOffset,
+        duration_ms: ttfbDuration,
+        status: ttfbDuration > 500 ? "critical" : ttfbDuration > 200 ? "warning" : "normal",
+      });
+      currentOffset += ttfbDuration;
+    }
+
+    // Download (remaining time)
+    const downloadDuration = report.tcp.total_time_ms - report.tcp.ttfb_ms;
+    if (downloadDuration > 0) {
+      segments.push({
+        type: "download",
+        label: "Content Download",
+        start_ms: currentOffset,
+        duration_ms: downloadDuration,
+        status: "normal",
+      });
+    }
 
     return segments;
-  }, [report, steps]);
+  }, [report]);
 
   // Generate hop analysis data (mock for visualization demo)
   const hopData = useMemo((): HopAnalysis[] => {
