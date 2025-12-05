@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Tauri
+src-tauri/target/
+netcheck-app/src-tauri/target/
+
+# Build outputs
+dist/
+build/
+*.dmg
+*.exe
+*.msi
+*.AppImage
+*.deb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Tauri specific
+src-tauri/.cargo/
